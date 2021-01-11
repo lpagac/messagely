@@ -106,11 +106,30 @@ class User {
     const user = User.get(username);
     if (user) {
       const results = await db.query(
-        `SELECT id, to_user, body, sent_at, read_at
+        `SELECT id, to_username, body, sent_at, read_at, u.username, u.first_name, u.last_name, u.phone
+         FROM messages AS m
+         JOIN users AS u ON u.username = m.to_username
          WHERE from_username = $1`, [username]);
-      return results.rows;
+
+      let messages = results.rows
+      if (!messages) return {};
+      messages = messages.map(m => {
+        return {
+          id: m.id,
+          body: m.body,
+          sent_at: m.sent_at,
+          read_at: m.read_at,
+          to_user: {
+            username: m.username,
+            first_name: m.first_name,
+            last_name: m.last_name,
+            phone: m.phone,
+          },
+        }
+      });
+
+      return messages;
     }
-    throw new NotFoundError(`No messages from ${username} were found.`);
   }
 
   /** Return messages to this user.
@@ -125,11 +144,31 @@ class User {
     const user = User.get(username);
     if (user) {
       const results = await db.query(
-        `SELECT id, from_user, body, sent_at, read_at
-        WHERE to_username = $1`, [username]);
-        return results.rows;
+        `SELECT id, from_username, body, sent_at, read_at, u.username, u.first_name, u.last_name, u.phone
+         FROM messages AS m
+         JOIN users AS u ON u.username = m.from_username
+         WHERE to_username = $1`, [username]);
+
+      let messages = results.rows
+      console.log('messages object', messages);
+      if (!messages) return {};
+      messages = messages.map(m => {
+        return {
+          id: m.id,
+          body: m.body,
+          sent_at: m.sent_at,
+          read_at: m.read_at,
+          from_user: {
+            username: m.username,
+            first_name: m.first_name,
+            last_name: m.last_name,
+            phone: m.phone,
+          },
+        }
+      });
+      console.log('after mapping', messages);
+      return messages;
     }
-    throw new NotFoundError(`No messages to ${username} were found.`);
   }
 }
 

@@ -4,7 +4,7 @@ const db = require("../db");
 const User = require("./user");
 const Message = require("./message");
 
-test("true", function (){
+test("true", function () {
   expect(1).toEqual(1);
 })
 describe("Test User class", function () {
@@ -35,37 +35,37 @@ describe("Test User class", function () {
 
 
   test("can authenticate", async function () {
+    await User.updateLoginTimestamp('test');
     let isValid = await User.authenticate("test", "password");
     expect(isValid).toBeTruthy();
 
     isValid = await User.authenticate("test", "xxx");
     expect(isValid).toBeFalsy();
   });
-  });
 
 
-  /*
-  test("can update login timestamp", async function () {
-    await db.query("UPDATE users SET last_login_at=NULL WHERE username='test'");
-    let u = await User.get("test");
-    expect(u.last_login_at).toBe(null);
+  // test("can update login timestamp", async function () {
+  //   await db.query("UPDATE users SET last_login_at=NULL WHERE username='test'");
+  //   let u = await User.get("test");
+  //   expect(u.last_login_at).toBe(null);
 
-    User.updateLoginTimestamp("test");
-    let u2 = await User.get("test");
-    expect(u2.last_login_at).not.toBe(null);
-  });
+  //   User.updateLoginTimestamp("test");
+  //   let u2 = await User.get("test");
+  //   expect(u2.last_login_at).not.toBe(null);
+  // });
 
-  test("can get", async function () {
-    let u = await User.get("test");
-    expect(u).toEqual({
-      username: "test",
-      first_name: "Test",
-      last_name: "Testy",
-      phone: "+14155550000",
-      last_login_at: expect.any(Date),
-      join_at: expect.any(Date),
-    });
-  });
+  // test("can get", async function () {
+  //   await User.updateLoginTimestamp('test');
+  //   let u = await User.get("test");
+  //   expect(u).toEqual({
+  //     username: "test",
+  //     first_name: "Test",
+  //     last_name: "Testy",
+  //     phone: "+14155550000",
+  //     last_login_at: expect.any(Date),
+  //     join_at: expect.any(Date),
+  //   });
+  // });
 
   test("can get all", async function () {
     let u = await User.all();
@@ -142,7 +142,6 @@ describe("Test messages part of User class", function () {
   });
 });
 
-*/
 afterAll(async function () {
   await db.end();
 });
