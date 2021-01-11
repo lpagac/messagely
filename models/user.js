@@ -1,6 +1,7 @@
 "use strict";
 
 const bcrypt = require("bcrypt");
+const { BCRYPT_WORK_FACTOR } = require("../config");
 const { user } = require("../db");
 const db = require("../db");
 const { UnauthorizedError, NotFoundError } = require("../expressError");
@@ -17,10 +18,11 @@ class User {
    */
 
   static async register({ username, password, first_name, last_name, phone }) {
+    password = await bcrypt.hash(password, BCRYPT_WORK_FACTOR);
     const result = await db.query(
-      `INSERT INTO users (username, password, first_name, last_name, phone, join_at)
-       VALUES ($1, $2, $3, $4, $5, now())
-       RETURNING username, password, first_name, last_name, phone`,
+      `INSERT INTO users (username, password, first_name, last_name, phone, join_at, last_login_at)
+       VALUES ($1, $2, $3, $4, $5, current_timestamp, current_timestamp)
+       RETURNING username, password, first_name, last_name`,
       [username, password, first_name, last_name, phone]
     );
     return result.rows[0];
@@ -35,11 +37,10 @@ class User {
     let user = result.rows[0];
     if (user) {
       if (await bcrypt.compare(password, user.password) === true) {
-        let token = jwt.sign({ username }, SECRET_KEY);
-        return res.json({ token });
+        return true;
       }
     }
-    throw new UnauthorizedError("Invalid user/password");
+    return false
   }
 
   /** Update last_login_at for user */
@@ -47,11 +48,10 @@ class User {
   static async updateLoginTimestamp(username) {
     const result = await db.query(
       `UPDATE users
-       SET(last_login_at)
-       VALUES (now())
+       SET last_login_at = current_timestamp
        WHERE username = $1
        RETURNING last_login_at`,
-      [username, last_login_at]
+      [username]
     );
     const last_login = result.rows[0];
     if (!last_login) throw new NotFoundError(`No such user: ${username}`);
@@ -86,6 +86,7 @@ class User {
        WHERE username = $1`, [username]
     );
     const user = result.rows[0];
+
     if (!user) throw new NotFoundError(`No such user: ${username}`);
 
     return user;
@@ -150,7 +151,7 @@ class User {
          WHERE to_username = $1`, [username]);
 
       let messages = results.rows
-      console.log('messages object', messages);
+      // console.log('messages object', messages);
       if (!messages) return {};
       messages = messages.map(m => {
         return {
@@ -166,7 +167,7 @@ class User {
           },
         }
       });
-      console.log('after mapping', messages);
+      // console.log('after mapping', messages);
       return messages;
     }
   }

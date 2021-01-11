@@ -44,28 +44,27 @@ describe("Test User class", function () {
   });
 
 
-  // test("can update login timestamp", async function () {
-  //   await db.query("UPDATE users SET last_login_at=NULL WHERE username='test'");
-  //   let u = await User.get("test");
-  //   expect(u.last_login_at).toBe(null);
+  test("can update login timestamp", async function () {
+    await db.query("UPDATE users SET last_login_at=NULL WHERE username='test'");
+    let u = await User.get("test");
+    expect(u.last_login_at).toBe(null);
 
-  //   User.updateLoginTimestamp("test");
-  //   let u2 = await User.get("test");
-  //   expect(u2.last_login_at).not.toBe(null);
-  // });
+    User.updateLoginTimestamp("test");
+    let u2 = await User.get("test");
+    expect(u2.last_login_at).not.toBe(null);
+  });
 
-  // test("can get", async function () {
-  //   await User.updateLoginTimestamp('test');
-  //   let u = await User.get("test");
-  //   expect(u).toEqual({
-  //     username: "test",
-  //     first_name: "Test",
-  //     last_name: "Testy",
-  //     phone: "+14155550000",
-  //     last_login_at: expect.any(Date),
-  //     join_at: expect.any(Date),
-  //   });
-  // });
+  test("can get", async function () {
+    let u = await User.get("test");
+    expect(u).toEqual({
+      username: "test",
+      first_name: "Test",
+      last_name: "Testy",
+      phone: "+14155550000",
+      join_at: expect.any(Date),
+     last_login_at: expect.any(Date),
+    });
+  });
 
   test("can get all", async function () {
     let u = await User.all();
