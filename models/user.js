@@ -1,8 +1,9 @@
 "use strict";
 
+const bcrypt = require("bcrypt");
 const { user } = require("../db");
 const db = require("../db");
-const { NotFoundError } = require("../expressError");
+const { UnauthorizedError, NotFoundError } = require("../expressError");
 
 `USERS SCHEMA:
 username | password | first_name | last_name | phone | join_at | last_login_at`
@@ -16,12 +17,11 @@ class User {
    */
 
   static async register({ username, password, first_name, last_name, phone }) {
-    const join_at = Date.now();
     const result = await db.query(
       `INSERT INTO users (username, password, first_name, last_name, phone, join_at)
-       VALUES ($1, $2, $3, $4, $5, $6)
+       VALUES ($1, $2, $3, $4, $5, now())
        RETURNING username, password, first_name, last_name, phone`,
-      [username, password, first_name, last_name, phone, join_at]
+      [username, password, first_name, last_name, phone]
     );
     return result.rows[0];
   }
@@ -45,11 +45,10 @@ class User {
   /** Update last_login_at for user */
 
   static async updateLoginTimestamp(username) {
-    const last_login_at = Date.now();
     const result = await db.query(
       `UPDATE users
        SET(last_login_at)
-       VALUES ($2)
+       VALUES (now())
        WHERE username = $1
        RETURNING last_login_at`,
       [username, last_login_at]
