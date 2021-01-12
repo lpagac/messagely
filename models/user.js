@@ -2,7 +2,6 @@
 
 const bcrypt = require("bcrypt");
 const { BCRYPT_WORK_FACTOR } = require("../config");
-const { user } = require("../db");
 const db = require("../db");
 const { UnauthorizedError, NotFoundError } = require("../expressError");
 
@@ -21,7 +20,13 @@ class User {
     const hashedPassword = await bcrypt.hash(password, BCRYPT_WORK_FACTOR);
     try {
       var result = await db.query(
-        `INSERT INTO users (username, password, first_name, last_name, phone, join_at, last_login_at)
+        `INSERT INTO users (username,
+           password,
+           first_name,
+           last_name,
+           phone,
+           join_at,
+           last_login_at)
          VALUES ($1, $2, $3, $4, $5, current_timestamp, current_timestamp)
          RETURNING username, password, first_name, last_name`,
         [username, hashedPassword, first_name, last_name, phone]
@@ -39,12 +44,7 @@ class User {
       "SELECT password FROM users WHERE username = $1",
       [username]);
     let user = result.rows[0];
-    if (user) {
-      if (await bcrypt.compare(password, user.password) === true) {
-        return true;
-      }
-    }
-    return false
+    return user && await bcrypt.compare(password, user.password) === true;
   }
 
   /** Update last_login_at for user */
@@ -57,10 +57,10 @@ class User {
        RETURNING last_login_at`,
       [username]
     );
-    const last_login = result.rows[0];
-    if (!last_login) throw new NotFoundError(`No such user: ${username}`);
+    const lastLogin = result.rows[0];
+    if (!lastLogin) throw new NotFoundError(`No such user: ${username}`);
 
-    return last_login;
+    return lastLogin;
   }
 
   /** All: basic info on all users:
@@ -69,7 +69,8 @@ class User {
   static async all() {
     const result = await db.query(
       `SELECT username, first_name, last_name, phone
-       FROM users`
+       FROM users
+       ORDER BY username`
     )
     return result.rows;
   }
@@ -91,7 +92,7 @@ class User {
     );
     const user = result.rows[0];
 
-    if (!user) throw new NotFoundError(`No such user: ${username}`);
+    if (result.rows.length === 0) throw new NotFoundError(`No such user: ${username}`);
 
     return user;
   }
@@ -108,17 +109,15 @@ class User {
    */
 
   static async messagesFrom(username) {
-    const user = User.get(username);
-    if (user) {
       const results = await db.query(
         `SELECT id, to_username, body, sent_at, read_at, u.username, u.first_name, u.last_name, u.phone
          FROM messages AS m
          JOIN users AS u ON u.username = m.to_username
          WHERE from_username = $1`, [username]);
-
-      let messages = results.rows
+      if (results.rows.length ===0) throw new NotFoundError();
+      let messages = results.rows;
       if (!messages) return {};
-      messages = messages.map(m => {
+      return messages.map(m => {
         return {
           id: m.id,
           body: m.body,
@@ -132,9 +131,6 @@ class User {
           },
         }
       });
-
-      return messages;
-    }
   }
 
   /** Return messages to this user.
@@ -146,7 +142,7 @@ class User {
    */
 
   static async messagesTo(username) {
-    const user = User.get(username);
+    const user = User.get(username); //REFACTOR
     if (user) {
       const results = await db.query(
         `SELECT id, from_username, body, sent_at, read_at, u.username, u.first_name, u.last_name, u.phone

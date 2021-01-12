@@ -1,10 +1,11 @@
 "use strict";
 
-const Router = require("express").Router;
-const router = new Router();
+const { Router } = require("express");
 const { UnauthorizedError } = require("../expressError");
 const Message = require("../models/message");
 const middleware = require('../middleware/auth');
+
+const router = new Router();
 
 /** GET /:id - get detail of message.
  *
@@ -23,7 +24,7 @@ router.get('/:id', async function (req, res, next) {
   let from_username = message.from_user.username;
   let to_username = message.to_user.username;
   let currentUsername = res.locals.user.username;
-
+// maybe refactor to handle error first
   if (currentUsername === from_username || currentUsername === to_username) {
     return res.json({ message });
   }
@@ -42,7 +43,7 @@ router.post('/', middleware.ensureLoggedIn, async function (req, res, next) {
   let { to_username, body } = req.body;
   // console.log(res.locals.user.username, req.body);
   let from_username = res.locals.user.username;
-  let message = await Message.create({from_username, to_username, body});
+  let message = await Message.create({ from_username, to_username, body });
   return res.json({ message });
 
 });

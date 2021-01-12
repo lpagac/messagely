@@ -1,9 +1,10 @@
 "use strict";
 
 const Router = require("express").Router;
-const router = new Router();
-const middleware = require('../middleware/auth');
 const User = require('../models/user');
+const middleware = require('../middleware/auth');
+
+const router = new Router();
 
 
 /** GET / - get list of users.
@@ -14,7 +15,7 @@ const User = require('../models/user');
 
 router.get('/', middleware.ensureLoggedIn, async function (req, res, next) {
   let users = await User.all();
-  return res.json(users);
+  return res.json({ users });
 })
 
 
@@ -24,7 +25,7 @@ router.get('/', middleware.ensureLoggedIn, async function (req, res, next) {
  *
  **/
 
-router.get('/:username',  middleware.ensureCorrectUser, async function (req, res, next) {
+router.get('/:username', middleware.ensureCorrectUser, async function (req, res, next) {
   let user = await User.get(req.params.username);
   return res.json({ user });
 })
@@ -42,7 +43,7 @@ router.get('/:username',  middleware.ensureCorrectUser, async function (req, res
  **/
 
 router.get('/:username/to', middleware.ensureCorrectUser, async function (req, res, next) {
-  let messages = User.messagesTo(req.params.username);
+  let messages = await User.messagesTo(req.params.username);
   return res.json({ messages });
 })
 
@@ -58,7 +59,7 @@ router.get('/:username/to', middleware.ensureCorrectUser, async function (req, r
  **/
 
 router.get('/:username/from', middleware.ensureCorrectUser, async function (req, res, next) {
-  let messages = User.messagesFrom(req.params.username);
+  let messages = await User.messagesFrom(req.params.username);
   return res.json({ messages });
 })
 
