@@ -34,6 +34,7 @@ router.get('/:id', async function (req, res, next) {
   }
 });
 
+/* GET /messages/ form to send a new message */
 
 router.get('/', async function (req, res, next) {
   let usernames = await User.all();

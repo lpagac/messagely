@@ -3,7 +3,7 @@
 const bcrypt = require("bcrypt");
 const { BCRYPT_WORK_FACTOR } = require("../config");
 const db = require("../db");
-const { UnauthorizedError, NotFoundError } = require("../expressError");
+const { ExpressError, UnauthorizedError, NotFoundError } = require("../expressError");
 
 `USERS SCHEMA:
 username | password | first_name | last_name | phone | join_at | last_login_at`
@@ -32,7 +32,8 @@ class User {
         [username, hashedPassword, first_name, last_name, phone]
       );
     } catch (err) {
-      return false;
+      console.log(err);
+      throw new ExpressError(err.detail, 418);
     }
     return result.rows[0];
   }
@@ -109,28 +110,27 @@ class User {
    */
 
   static async messagesFrom(username) {
-      const results = await db.query(
-        `SELECT id, to_username, body, sent_at, read_at, u.username, u.first_name, u.last_name, u.phone
+    const results = await db.query(
+      `SELECT id, to_username, body, sent_at, read_at, u.username, u.first_name, u.last_name, u.phone
          FROM messages AS m
          JOIN users AS u ON u.username = m.to_username
          WHERE from_username = $1`, [username]);
-      if (results.rows.length ===0) throw new NotFoundError();
-      let messages = results.rows;
-      if (!messages) return {};
-      return messages.map(m => {
-        return {
-          id: m.id,
-          body: m.body,
-          sent_at: m.sent_at,
-          read_at: m.read_at,
-          to_user: {
-            username: m.username,
-            first_name: m.first_name,
-            last_name: m.last_name,
-            phone: m.phone,
-          },
-        }
-      });
+    if (results.rows.length === 0) throw new NotFoundError();
+    let messages = results.rows;
+    return messages.map(m => {
+      return {
+        id: m.id,
+        body: m.body,
+        sent_at: m.sent_at,
+        read_at: m.read_at,
+        to_user: {
+          username: m.username,
+          first_name: m.first_name,
+          last_name: m.last_name,
+          phone: m.phone,
+        },
+      }
+    });
   }
 
   /** Return messages to this user.
@@ -142,34 +142,30 @@ class User {
    */
 
   static async messagesTo(username) {
-    const user = User.get(username); //REFACTOR
-    if (user) {
-      const results = await db.query(
-        `SELECT id, from_username, body, sent_at, read_at, u.username, u.first_name, u.last_name, u.phone
+    const results = await db.query(
+      `SELECT id, from_username, body, sent_at, read_at, u.username, u.first_name, u.last_name, u.phone
          FROM messages AS m
          JOIN users AS u ON u.username = m.from_username
          WHERE to_username = $1`, [username]);
 
-      let messages = results.rows
-      // console.log('messages object', messages);
-      if (!messages) return {};
-      messages = messages.map(m => {
-        return {
-          id: m.id,
-          body: m.body,
-          sent_at: m.sent_at,
-          read_at: m.read_at,
-          from_user: {
-            username: m.username,
-            first_name: m.first_name,
-            last_name: m.last_name,
-            phone: m.phone,
-          },
-        }
-      });
-      // console.log('after mapping', messages);
-      return messages;
-    }
+    if (results.rows.length === 0) throw new NotFoundError();
+    let messages = results.rows;
+    messages = messages.map(m => {
+      return {
+        id: m.id,
+        body: m.body,
+        sent_at: m.sent_at,
+        read_at: m.read_at,
+        from_user: {
+          username: m.username,
+          first_name: m.first_name,
+          last_name: m.last_name,
+          phone: m.phone,
+        },
+      }
+    });
+
+    return messages;
   }
 }
 

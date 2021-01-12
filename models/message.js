@@ -101,6 +101,7 @@ class Message {
     client.messages
       .create({body: `You received a message from ${fromUsername}`, from: '+12513519064', to: `${toUserPhone}`})
       .then(message => console.log(message.sid));
+      // REFACTOR dont need to .then
   }
 }
 

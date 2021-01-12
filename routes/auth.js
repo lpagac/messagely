@@ -16,6 +16,7 @@ router.get('/login', async function (req, res, next){
 
 router.post('/login', async function (req, res, next) {
   const { username, password } = req.body;
+  
   if (await User.authenticate(username, password)) {
     let token = jwt.sign({ username }, SECRET_KEY);
     await User.updateLoginTimestamp(username);
@@ -36,7 +37,7 @@ router.get('/register', async function (req, res, next){
 
 router.post('/register', async function (req, res, next) {
   let { username } = await User.register(req.body);
-  console.log("newuser", username);
+
   let token = jwt.sign({ username }, SECRET_KEY);
   await User.updateLoginTimestamp(username);
   return res.json({ token });
