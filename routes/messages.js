@@ -19,7 +19,7 @@ const middleware = require('../middleware/auth');
  *
  **/
 router.get('/:id', async function (req, res, next) {
-  let message = Message.get(req.params.id);
+  let message = await Message.get(req.params.id);
   let from_username = message.from_user.username;
   let to_username = message.to_user.username;
   let currentUsername = res.locals.user.username;
@@ -40,7 +40,9 @@ router.get('/:id', async function (req, res, next) {
  **/
 router.post('/', middleware.ensureLoggedIn, async function (req, res, next) {
   let { to_username, body } = req.body;
-  let message = await Message.create(res.locals.user.username, to_username, body);
+  // console.log(res.locals.user.username, req.body);
+  let from_username = res.locals.user.username;
+  let message = await Message.create({from_username, to_username, body});
   return res.json({ message });
 
 });
@@ -53,7 +55,7 @@ router.post('/', middleware.ensureLoggedIn, async function (req, res, next) {
  *
  **/
 router.post('/:id/read', middleware.ensureLoggedIn, async function (req, res, next) {
-  let m = Message.get(req.params.id);
+  let m = await Message.get(req.params.id);
   if (res.locals.user.username === m.to_user.username) {
     let message = await Message.markRead(req.params.id);
     return res.json({ message });
