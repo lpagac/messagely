@@ -7,6 +7,11 @@ const { UnauthorizedError } = require('../expressError');
 
 const router = new Router();
 
+/* GET /login shows login page */
+router.get('/login', async function (req, res, next){
+  return res.render('login.html');
+});
+
 /** POST /login: {username, password} => {token} */
 
 router.post('/login', async function (req, res, next) {
@@ -19,6 +24,10 @@ router.post('/login', async function (req, res, next) {
   throw new UnauthorizedError("Invalid user/password");
 });
 
+/* GET /register */
+router.get('/register', async function (req, res, next){
+  return res.render('signup.html');
+});
 
 /** POST /register: registers, logs in, and returns token.
  *

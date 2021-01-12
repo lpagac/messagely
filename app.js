@@ -3,8 +3,9 @@
 /** Express app for message.ly. */
 
 
-const express = require("express");
 const cors = require("cors");
+const express = require("express");
+const nunjucks = require("nunjucks");
 const { authenticateJWT } = require("./middleware/auth");
 
 const { NotFoundError } = require("./expressError");
@@ -25,11 +26,19 @@ app.use(authenticateJWT);
 const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/users");
 const messageRoutes = require("./routes/messages");
+nunjucks.configure("templates", {
+  autoescape: true,
+  express: app,
+});
+
 
 app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
 app.use("/messages", messageRoutes);
 
+app.get('/', function (req, res, next) {
+  return res.redirect('/auth/login');
+});
 
 /** 404 handler: matches unmatched routes; raises NotFoundError. */
 app.use(function (req, res, next) {

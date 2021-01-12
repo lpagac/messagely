@@ -8,12 +8,6 @@ const middleware = require('../middleware/auth');
 
 const router = new Router();
 
-/* Status route for SMS message notifcations */
-
-router.post('/status', function (req, res, next) {
-  console.log(req.body.smsStatus, req.body.messageStatus);
-})
-
 /** GET /:id - get detail of message.
  *
  * => {message: {id,
@@ -31,13 +25,20 @@ router.get('/:id', async function (req, res, next) {
   let from_username = message.from_user.username;
   let to_username = message.to_user.username;
   let currentUsername = res.locals.user.username;
-// maybe refactor to handle error first
+  // maybe refactor to handle error first
   if (currentUsername === from_username || currentUsername === to_username) {
     return res.json({ message });
   }
   else {
     throw new UnauthorizedError();
   }
+});
+
+
+router.get('/', async function (req, res, next) {
+  let usernames = await User.all();
+  usernames = usernames.map(user => user.username);
+  return res.render('new-message.html', { usernames });
 });
 
 /** POST / - post message.
@@ -51,11 +52,11 @@ router.post('/', middleware.ensureLoggedIn, async function (req, res, next) {
   // console.log(res.locals.user.username, req.body);
   let from_username = res.locals.user.username;
   let message = await Message.create({ from_username, to_username, body });
-  
+
   let toUser = await User.get(to_username);
   console.log(toUser.phone);
   await Message.sendSMS(from_username, toUser.phone);
-  
+
   return res.json({ message });
 });
 
