@@ -15,6 +15,13 @@ const SECRET_KEY = process.env.SECRET_KEY || "secret";
 const BCRYPT_WORK_FACTOR = 12;
 
 const jwt = require('jsonwebtoken');
+const twilio = require('twilio');
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN;
+console.log(process.env);
+console.log(accountSid, authToken);
+
+const client = new twilio(accountSid, authToken);
 
 
 module.exports = {
@@ -22,4 +29,5 @@ module.exports = {
   SECRET_KEY,
   BCRYPT_WORK_FACTOR,
   jwt,
+  client,
 };

@@ -4,6 +4,7 @@
 
 const { NotFoundError } = require("../expressError");
 const db = require("../db");
+const { client } = require('../config');
 
 /** Message on the site. */
 
@@ -94,6 +95,12 @@ class Message {
       sent_at: m.sent_at,
       read_at: m.read_at,
     };
+  }
+
+  static async sendSMS(fromUsername, toUserPhone) {
+    client.messages
+      .create({body: `You received a message from ${fromUsername}`, from: '+12513519064', to: `${toUserPhone}`})
+      .then(message => console.log(message.sid));
   }
 }
 

@@ -3,9 +3,16 @@
 const { Router } = require("express");
 const { UnauthorizedError } = require("../expressError");
 const Message = require("../models/message");
+const User = require('../models/user');
 const middleware = require('../middleware/auth');
 
 const router = new Router();
+
+/* Status route for SMS message notifcations */
+
+router.post('/status', function (req, res, next) {
+  console.log(req.body.smsStatus, req.body.messageStatus);
+})
 
 /** GET /:id - get detail of message.
  *
@@ -44,8 +51,12 @@ router.post('/', middleware.ensureLoggedIn, async function (req, res, next) {
   // console.log(res.locals.user.username, req.body);
   let from_username = res.locals.user.username;
   let message = await Message.create({ from_username, to_username, body });
+  
+  let toUser = await User.get(to_username);
+  console.log(toUser.phone);
+  await Message.sendSMS(from_username, toUser.phone);
+  
   return res.json({ message });
-
 });
 
 /** POST/:id/read - mark message as read:
